@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>爆火短视频全维度分析框架 · Viral Video Analysis Framework</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ============ 主题色(🖋 墨水经典) ============ */
+    --ink:#0a0a0b;
+    --ink-rgb:10,10,11;
+    --paper:#f1efea;
+    --paper-rgb:241,239,234;
+    --paper-tint:#e8e5de;
+    --ink-tint:#18181a;
+
+    /* ============ 字体(跨主题固定) ============ */
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --serif-en:"Playfair Display","Source Serif 4",Georgia,serif;
+    --serif-body-en:"Source Serif 4",Georgia,serif;
+    --serif-zh:"Noto Serif SC",source-han-serif-sc,serif;
+    --sans-zh:"Noto Sans SC",source-han-sans-sc,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--ink);color:var(--paper);font-family:var(--sans-zh);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+  /* ============ WebGL 双背景 ============ */
+  canvas.bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block;transition:opacity 1.2s ease}
+  canvas#bg-light{opacity:0}
+  canvas#bg-dark{opacity:1}
+  body.light-bg canvas#bg-light{opacity:1}
+  body.light-bg canvas#bg-dark{opacity:0}
+
+  /* ============ Deck 容器 + 翻页 ============ */
+  #deck{position:fixed;inset:0;width:10000vw;height:100vh;display:flex;flex-wrap:nowrap;transition:transform .9s cubic-bezier(.77,0,.175,1);z-index:10;will-change:transform}
+  .slide{width:100vw;height:100vh;flex:0 0 100vw;position:relative;padding:5vh 5vw 9vh 5vw;display:flex;flex-direction:column;overflow:hidden}
+  .slide.light{color:var(--ink);background:var(--paper)}
+  .slide.dark{color:var(--paper);background:var(--ink)}
+
+  .slide::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;transition:background .7s ease}
+  .slide.light::before{background:rgba(var(--paper-rgb),.78);backdrop-filter:blur(3px)}
+  .slide.dark::before{background:rgba(var(--ink-rgb),.78);backdrop-filter:blur(3px)}
+  .slide.hero.light::before{background:rgba(var(--paper-rgb),.16);backdrop-filter:none}
+  .slide.hero.dark::before{background:rgba(var(--ink-rgb),.12);backdrop-filter:none}
+  .slide.hero.light::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(var(--paper-rgb),.28) 0%,rgba(var(--paper-rgb),0) 14%,rgba(var(--paper-rgb),0) 86%,rgba(var(--paper-rgb),.28) 100%)}
+  .slide.hero.dark::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(var(--ink-rgb),.32) 0%,rgba(var(--ink-rgb),0) 14%,rgba(var(--ink-rgb),0) 86%,rgba(var(--ink-rgb),.32) 100%)}
+
+  /* ============ Magazine chrome ============ */
+  .chrome{display:flex;justify-content:space-between;align-items:flex-start;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.7;flex-shrink:0}
+  .chrome .left,.chrome .right{display:flex;gap:2.4em;align-items:center}
+  .chrome .sep{width:40px;height:1px;background:currentColor;opacity:.4}
+  .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.55;flex-shrink:0;padding-top:2vh}
+  .foot .title{font-family:var(--serif-zh);font-weight:400;letter-spacing:.05em;text-transform:none;opacity:.75;font-size:12px}
+
+  .tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;padding:5px 12px;border:1px solid currentColor;opacity:.85}
+  .rule{width:100%;height:1px;background:currentColor;opacity:.25;margin:2.5vh 0;flex-shrink:0}
+
+  /* ============ 字体规则 ============ */
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;opacity:.6;margin-bottom:2vh}
+  .h-hero{font-family:var(--serif-zh);font-weight:900;font-size:9vw;line-height:.96;letter-spacing:-.02em}
+  .h-xl{font-family:var(--serif-zh);font-weight:700;font-size:5.5vw;line-height:1.1;letter-spacing:-.01em}
+  .h-sub{font-family:var(--serif-zh);font-weight:500;font-size:2.8vw;line-height:1.25;letter-spacing:0;opacity:.7}
+  .h-md{font-family:var(--serif-zh);font-weight:600;font-size:2.1vw;line-height:1.3}
+  .lead{font-family:var(--serif-zh);font-weight:400;font-size:1.7vw;line-height:1.5;opacity:.86}
+  .body-zh{font-family:var(--sans-zh);font-weight:400;font-size:max(14px,1.1vw);line-height:1.75;opacity:.82;letter-spacing:.01em}
+  .meta{font-family:var(--mono);font-size:max(10px,.82vw);letter-spacing:.16em;text-transform:uppercase;opacity:.6}
+
+  .big-num{font-family:var(--serif-en);font-weight:800;font-size:9vw;line-height:.85;letter-spacing:-.03em;font-feature-settings:"tnum"}
+  .ghost{font-family:var(--serif-en);font-weight:900;font-size:30vw;line-height:.8;opacity:.06;position:absolute;font-feature-settings:"tnum"}
+
+  /* ============ 布局工具 ============ */
+  .col{display:flex;flex-direction:column;gap:2vh}
+  .row{display:flex;align-items:center;gap:3vw}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:4vw;flex:1;align-items:center}
+  .split-55{display:grid;grid-template-columns:55fr 45fr;gap:5vw;flex:1;align-items:stretch}
+  .fill{flex:1}
+  .center{display:flex;align-items:center;justify-content:center;text-align:center;flex:1}
+  .bottom-left{position:absolute;left:5vw;bottom:8vh;max-width:50vw}
+  .top-right{position:absolute;right:5vw;top:5vh;text-align:right}
+
+  /* ============ Stat ============ */
+  .stat-card{display:flex;flex-direction:column;gap:.7vh;align-items:flex-start;padding-top:1.4vh;border-top:1px solid currentColor;border-color:rgba(127,127,127,.3)}
+  .stat-label{font-family:var(--mono);font-size:max(9px,.72vw);letter-spacing:.24em;text-transform:uppercase;opacity:.55}
+  .stat-nb{font-family:var(--serif-en);font-weight:800;font-size:5.2vw;line-height:.9;letter-spacing:-.03em;font-feature-settings:"tnum";margin-top:.3vh}
+  .stat-unit{font-family:var(--serif-zh);font-weight:500;font-size:.38em;letter-spacing:0;opacity:.72;margin-left:.14em}
+  .stat-note{font-family:var(--sans-zh);font-weight:400;font-size:max(12px,.98vw);line-height:1.5;opacity:.72;margin-top:.5vh}
+
+  /* ============ Callout ============ */
+  .callout{padding:2.5vh 2vw;border-left:3px solid currentColor;position:relative;font-family:var(--serif-zh);font-size:max(14px,1.1vw);line-height:1.55;opacity:.92}
+  .slide.light .callout{background:rgba(var(--ink-rgb),.05)}
+  .slide.dark .callout{background:rgba(var(--paper-rgb),.06)}
+  .callout .cite{display:block;margin-top:1.2vh;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.6}
+
+  /* ============ Pipeline ============ */
+  .pipeline-section{margin-top:3.5vh;padding-top:2.2vh;border-top:1px dashed rgba(127,127,127,.32)}
+  .pipeline-label{font-family:var(--mono);font-size:max(10px,.8vw);letter-spacing:.24em;text-transform:uppercase;opacity:.62;margin-bottom:1.8vh}
+  .pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2vw}
+  .step{display:flex;flex-direction:column;gap:.7vh;padding-top:1.2vh;border-top:1px solid currentColor;border-color:rgba(127,127,127,.35)}
+  .step-nb{font-family:var(--serif-en);font-style:italic;font-weight:500;font-size:1.1vw;opacity:.45}
+  .step-title{font-family:var(--sans-zh);font-weight:700;font-size:1.4vw;letter-spacing:.01em;line-height:1.2}
+  .step-desc{font-family:var(--sans-zh);font-weight:400;font-size:max(11px,.88vw);line-height:1.45;opacity:.72}
+
+  /* ============ 网格 ============ */
+  .grid-4{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);gap:3vh 5vw;flex:1;align-content:center}
+  .grid-8{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,auto);gap:2.5vh 2.5vw;flex:1;align-content:center}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:3vw;flex:1;align-content:center}
+  .dim-card{display:flex;flex-direction:column;gap:.8vh;padding:1.5vh 1vw;border-left:2px solid currentColor;border-color:rgba(127,127,127,.3)}
+  .dim-nb{font-family:var(--serif-en);font-weight:800;font-size:2.8vw;line-height:.9;opacity:.35}
+  .dim-name{font-family:var(--serif-zh);font-weight:700;font-size:1.6vw;line-height:1.2}
+  .dim-desc{font-family:var(--sans-zh);font-weight:400;font-size:max(11px,.85vw);line-height:1.5;opacity:.7}
+
+  /* ============ 列表 ============ */
+  .chk-list{display:flex;flex-direction:column;gap:1.2vh;font-family:var(--sans-zh);font-size:max(13px,1.05vw);line-height:1.6;opacity:.85;padding-left:0;list-style:none}
+  .chk-list li{padding-left:1.5em;position:relative}
+  .chk-list li::before{content:"✓";position:absolute;left:0;font-family:var(--mono);font-size:.85em;opacity:.5}
+
+  /* ============ 对比 ============ */
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 4vw;flex:1;align-content:center}
+  .compare-col{padding:2vh 2vw;border-left:3px solid currentColor;border-color:rgba(127,127,127,.35)}
+  .compare-col.bad{opacity:.55}
+  .compare-label{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.7;margin-bottom:1.5vh}
+
+  /* ============ 图片 ============ */
+  .frame-img{overflow:hidden;position:relative;background:rgba(0,0,0,.04);box-sizing:border-box;width:100%;border-radius:3px}
+  .slide.dark .frame-img{background:rgba(255,255,255,.04)}
+  .frame-img > img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+
+  /* ============ 动效 ============ */
+  [data-anim]{opacity:1}
+  body.motion-ready [data-anim]{opacity:0}
+  body.motion-ready [data-anim="left"]{transform:translateX(-24px)}
+  body.motion-ready [data-anim="right"]{transform:translateX(24px)}
+  body.motion-ready [data-anim="line"]{opacity:0;transform:translateY(10px)}
+  body.motion-ready [data-animate="pipeline"] [data-anim]{opacity:.15}
+
+  @media (max-width:900px){
+    .h-hero{font-size:13vw}
+    .h-xl{font-size:8vw}
+    .pipeline{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-dark" class="bg"></canvas>
+<canvas id="bg-light" class="bg"></canvas>
+<div id="hint">← → 翻页 · ESC 索引</div>
+
+<div id="deck">
+
+<!-- ============ SLIDE 1: 封面 ============ -->
+<section class="slide hero dark">
+  <div class="chrome">
+    <div>法律/知识类账号 · 内容分析框架</div>
+    <div>Vol.01</div>
+  </div>
+  <div class="frame" style="display:grid;gap:4vh;align-content:center;min-height:80vh">
+    <div class="kicker" data-anim>内容策略 · Content Strategy</div>
+    <h1 class="h-hero" data-anim>爆火短视频</h1>
+    <h2 class="h-sub" data-anim>全维度分析框架</h2>
+    <p class="lead" style="max-width:60vw" data-anim>
+      爆火从来不是偶然，而是选题、内容、算法、情绪、时机<br>多重因素共振的结果。
+    </p>
+  </div>
+  <div class="foot">
+    <div>适配法律科普、社会热点类短视频</div>
+    <div>— 2026 —</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 2: 8大维度概览 ============ -->
+<section class="slide light">
+  <div class="chrome">
+    <div>框架总览 · Framework Overview</div>
+    <div>02 / 15</div>
+  </div>
+  <div class="frame" style="padding-top:4vh;display:flex;flex-direction:column;gap:3vh;flex:1;overflow:hidden">
+    <div>
+      <div class="kicker" data-anim>8 Dimensions</div>
+      <h2 class="h-xl" data-anim>8 大核心维度</h2>
+      <p class="lead" style="margin-top:1.5vh;max-width:65vw" data-anim>
+        覆盖从表层数据到底层逻辑的全链条，系统拆解爆火原因。
+      </p>
+    </div>
+    <div class="grid-8" data-anim>
+      <div class="dim-card">
+        <div class="dim-nb">01</div>
+        <div class="dim-name">数据维度</div>
+        <div class="dim-desc">数据结构、趋势、质量判断</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-nb">02</div>
+        <div class="dim-name">选题维度</div>
+        <div class="dim-desc">爆火基因与可复制性</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-nb">03</div>
+        <div class="dim-name">内容结构</div>
+        <div class="dim-desc">爆款公式与可复用逻辑</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-nb">04</div>
+        <div class="dim-name">呈现形式</div>
+        <div class="dim-desc">观看体验与完播率</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-nb">05</div>
+        <div class="dim-name">用户互动</div>
+        <div class="dim-desc">评论区挖矿与需求挖掘</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-nb">06</div>
+        <div class="dim-name">算法与平台</div>
+        <div class="dim-desc">推荐逻辑与流量借势</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-nb">07</div>
+        <div class="dim-name">风险与合规</div>
+        <div class="dim-desc">爆雷隐患与账号安全</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-nb">08</div>
+        <div class="dim-name">商业价值</div>
+        <div class="dim-desc">变现潜力与流量转化</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>8 大维度 · 全链条覆盖</div>
+    <div>Framework</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 3: 数据维度 ============ -->
+<section class="slide dark">
+  <div class="chrome">
+    <div>维度一 · Data Dimension</div>
+    <div>03 / 15</div>
+  </div>
+  <div class="frame" style="padding-top:4vh;display:flex;flex-direction:column;gap:3vh;flex:1;overflow:hidden">
+    <div>
+      <div class="kicker" data-anim>Dimension 01</div>
+      <h2 class="h-xl" data-anim>数据维度</h2>
+      <p class="lead" style="margin-top:1vh;max-width:60vw" data-anim>
+        先看"数字真相"，判断爆火类型与质量。数据是最终极的客观标准。
+      </p>
+    </div>
+    <div class="grid-4" style="margin-top:2vh" data-anim>
+      <div class="stat-card">
+        <div class="stat-label">完播率</div>
+        <div class="stat-nb">30<span class="stat-unit">%+</span></div>
+        <div class="stat-note">1-2分钟视频≥30%为优质<br>案例类＞纯法条类</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">5秒留存率</div>
+        <div class="stat-nb">50<span class="stat-unit">%+</span></div>
+        <div class="stat-note">低于50%说明开头失败<br>是没流量的核心原因</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">评论/点赞比</div>
+        <div class="stat-nb">高<span class="stat-unit">评论</span></div>
+        <div class="stat-note">法律类爆火视频常出现<br>评论＞点赞（强情绪）</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">粉丝转化率</div>
+        <div class="stat-nb">3<span class="stat-unit">%+</span></div>
+        <div class="stat-note">垂直法律类≥3%为优秀<br>泛热点类偏低</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>维度一 · 数据真相</div>
+    <div>Data</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 4: 数据结构类型 ============ -->
+<section class="slide light">
+  <div class="chrome">
+    <div>数据维度 · 结构分析</div>
+    <div>04 / 15</div>
+  </div>
+  <div class="frame" style="padding-top:4vh;display:flex;flex-direction:column;gap:3vh;flex:1;overflow:hidden">
+    <div>
+      <div class="kicker" data-anim>Data Structure</div>
+      <h2 class="h-xl" data-anim>数据结构类型</h2>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2.5vh;flex:1;justify-content:center" data-anim>
+      <div class="callout">
+        <strong>均衡型</strong>：点赞≈评论≈转发，内容同时具备认可度、话题度和实用性，最健康的爆款。
+      </div>
+      <div class="callout" style="margin-top:1vh">
+        <strong>高评论型</strong>：评论远高于点赞，代表<strong>强情绪、强争议、强代入</strong>，算法权重极高，但需注意舆论风险。
+      </div>
+      <div class="callout" style="margin-top:1vh">
+        <strong>高收藏型</strong>：收藏远高于点赞，代表<strong>强工具属性</strong>，用户觉得"以后用得上"，长尾流量极强。
+      </div>
+      <div class="callout" style="margin-top:1vh">
+        <strong>高转发型</strong>：转发远高于点赞，代表<strong>强社交传播性</strong>，内容能引发用户身份认同或分享欲。
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>四种数据结构类型</div>
+    <div>Structure</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 5: 选题维度 ============ -->
+<section class="slide dark">
+  <div class="chrome">
+    <div>维度二 · Topic Dimension</div>
+    <div>05 / 15</div>
+  </div>
+  <div class="frame" style="padding-top:4vh;display:flex;flex-direction:column;gap:3vh;flex:1;overflow:hidden">
+    <div>
+      <div class="kicker" data-anim>Dimension 02</div>
+      <h2 class="h-xl" data-anim>选题维度</h2>
+      <p class="lead" style="margin-top:1vh;max-width:60vw" data-anim>
+        找到"爆火基因"，判断可复制性。选题决定了视频的流量上限。
+      </p>
+    </div>
+    <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:2vh 3vw;align-content:center" data-anim>
+      <div class="dim-card">
+        <div class="dim-name">社会热点型</div>
+        <div class="dim-desc">紧跟最新热点事件，借势平台流量扶持，是最快起量的方式</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">痛点刚需型</div>
+        <div class="dim-desc">解决普通人最关心的法律问题：离婚、劳动仲裁、彩礼返还</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">反差认知型</div>
+        <div class="dim-desc">打破大众常识误区："分居两年自动离婚"是假的</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">情绪共鸣型</div>
+        <div class="dim-desc">站在弱势方立场发声，引发大众共情</div>
+      </div>
+      <div class="dim-card">
+        <div class="dim-name">猎奇案例型</div>
+        <div class="dim-desc">罕见、奇葩、反转的真实案例，极具话题性</div>
+      </div>
+      <div class="dim-card" style="border-left-color:transparent">
+        <div class="dim-name" style="font-size:1.3vw;opacity:.6">切入点关键</div>
+        <div class="dim-desc">角度是否独特 · 是否贴近普通人 · 是否有争议性</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>维度二 · 选题基因</div>
+    <div>Topic</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 6: 内容结构维度 ============ -->
+<section class="slide hero dark">
+  <div class="chrome">
+    <div>维度三 · Content Structure</div>
+    <div>06 / 15</div>
+  </div>
+  <div class="frame" style="display:grid;gap:5vh;align-content:center;min-height:75vh">
+    <div class="kicker" data-anim>Dimension 03 · 最重要</div>
+    <h1 class="h-hero" style="font-size:7.5vw" data-anim>内容结构维度</h1>
+    <p class="lead" style="max-width:55vw" data-anim>
+      短视频的内容结构有极强规律性。<br>爆火的结构几乎可以直接套用。
+    </p>
+  </div>
+  <div class="foot">
+    <div>维度三 · 爆款公式</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 7: 黄金3秒 + 结构 ============ -->
+<section class="slide light">
+  <div class="chrome">
+    <div>内容结构 · 爆款公式</div>
+    <div>07 / 15</div>
+  </div>
+  <div class="frame" style="padding-top:4vh;display:flex;flex-direction:column;gap:3vh;flex:1;overflow:hidden">
+    <div>
+      <div class="kicker" data-anim>Hook · Structure · CTA</div>
+      <h2 class="h-xl" data-anim>黄金3秒钩子</h2>
+      <p class="lead" style="margin-top:1vh" data-anim>
+        法律类视频最常用的5种爆款钩子类型。
+      </p>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:1.8vh;justify-content:center" data-anim>
+      <div class="callout" style="padding:1.8vh 1.8vw">
+        <strong>悬念式</strong>："男子醉死车内，代驾只赔了5.7万？法院的判决让所有人都没想到"
+      </div>
+      <div class="callout" style="padding:1.8vh 1.8vw;margin-top:.5vh">
+        <strong>痛点式</strong>："官司打赢了却拿不到钱？90%的人都忘了这关键一步"
+      </div>
+      <div class="callout" style="padding:1.8vh 1.8vw;margin-top:.5vh">
+        <strong>反差式</strong>："同样是同居，民事上财产各归各，刑事上却可能构成重婚罪"
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>钩子类型 · 结构公式</div>
+    <div>Structure</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 8: 呈现形式维度 ============ -->
+<section class="slide dark">
+  <div class="chrome">
+    <div>维度四 · Presentation Dimension</div>
+    <div>08 / 15</div>
+  </div>
+  <div class="frame" style="padding-top:4vh;display:flex;flex-direction:column;gap:3vh;flex:1;overflow:hidden">
+    <div>
+      <div class="kicker" data-anim>Dimension 04</div>
+      <h2 class="h-xl" data-anim>呈现形式维度</h2>
+      <p class="lead" style="margin-top:1vh;max-width:60vw" data-anim>
+        同样的内容，不同的呈现形式，流量可能相差10倍。
+      </p>
+    </div>
+    <div class="compare-grid" style="margin-top:2vh" data-anim>
+      <div class="compare-col">
+        <div class="compare-label">✓ 正确做法</div>
+        <ul class="chk-list">
+          <li>语速适中，语气坚定带温度</li>
+          <li>背景干净整洁，符合专业形象</li>
+          <li>字幕清晰，重点内容加粗变色</li>
+          <li>1-2分钟最佳，最长不超3分钟</li>
+          <li>每10-15秒有一个信息点</li>
+        </ul>
+      </div>
+      <div class="compare-col bad">
+        <div class="compare-label">✗ 常见错误</div>
+        <ul class="chk-list">
+          <li>语速过快或过于生硬说教</li>
+          <li>背景杂乱，画面不专业</li>
+          <li>满屏字幕，无重点标注</li>
+          <li>视频过长，信息密度不均</li>
+          <li>一个镜头太久，无转场节奏</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>维度四 · 观看体验</div>
+    <div>Presentation</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 9: 用户互动 + 算法 ============ -->
+<section class="slide hero light">
+  <div class="chrome">
+    <div>维度五 & 六 · Interaction & Algorithm</div>
+    <div>09 / 15</div>
+  </div>
+  <div class="frame" style="display:grid;gap:5vh;align-content:center;min-height:75vh">
+    <div class="kicker" data-anim>Dimension 05 & 06</div>
+    <h1 class="h-hero" style="font-size:7vw;line-height:1.1" data-anim>
+      <span style="display:block">用户互动</span>
+      <span style="display:block">算法与平台</span>
+    </h1>
+    <p class="lead" style="max-width:55vw" data-anim>
+      评论区是宝藏，藏着用户最真实的需求。<br>不同平台算法逻辑不同，同一个视频表现可能天差地别。
+    </p>
+  </div>
+  <div class="foot">
+    <div>维度五 & 六 · 互动与算法</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 10: 平台对比 ============ -->
+<section class="slide light">
+  <div class="chrome">
+    <div>算法与平台 · 平台对比</div>
+    <div>10 / 15</div>
+  </div>
+  <div class="frame" style="padding-top:4vh;display:flex;flex-direction:column;gap:3vh;flex:1;overflow:hidden">
+    <div>
+      <div class="kicker" data-anim>Platform Analysis</div>
+      <h2 class="h-xl" data-anim>三大平台对比</h2>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:2vh;justify-content:center" data-anim>
+      <div class="split" style="gap:3vw">
+        <div class="callout">
+          <div style="font-family:var(--serif-zh);font-weight:700;font-size:1.5vw;margin-bottom:1vh">抖音</div>
+          <div class="body-zh">重内容质量和完播率，推荐逻辑是"内容找人"，适合做泛流量和热点内容</div>
+        </div>
+        <div class="callout">
+          <div style="font-family:var(--serif-zh);font-weight:700;font-size:1.5vw;margin-bottom:1vh">视频号</div>
+          <div class="body-zh">重社交传播和私域流量，推荐逻辑是"人找人"，适合做本地流量和精准客户</div>
+        </div>
+        <div class="callout">
+          <div style="font-family:var(--serif-zh);font-weight:700;font-size:1.5vw;margin-bottom:1vh">小红书</div>
+          <div class="body-zh">重干货价值和收藏率，适合做图文和长视频，用户付费意愿更高</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>三大平台适配性分析</div>
+    <div>Platforms</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 11: 风险与合规 ============ -->
+<section class="slide dark">
+  <div class="chrome">
+    <div>维度七 · Risk & Compliance</div>
+    <div>11 / 15</div>
+  </div>
+  <div class="frame" style="padding-top:4vh;display:flex;flex-direction:column;gap:3vh;flex:1;overflow:hidden">
+    <div>
+      <div class="kicker" data-anim>Dimension 07 · 高风险</div>
+      <h2 class="h-xl" data-anim>风险与合规维度</h2>
+      <p class="lead" style="margin-top:1vh;max-width:60vw" data-anim>
+        法律类视频是高风险领域，爆火的同时也容易引发合规问题。
+      </p>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:2vh;justify-content:center" data-anim>
+      <div class="callout">
+        <div style="font-family:var(--serif-zh);font-weight:700;font-size:1.4vw;margin-bottom:.8vh">内容合规风险</div>
+        <div class="body-zh">泄露当事人隐私 · 误导性言论（"一定能赢"） · 违反公序良俗 · 涉及敏感话题</div>
+      </div>
+      <div class="callout" style="margin-top:1vh">
+        <div style="font-family:var(--serif-zh);font-weight:700;font-size:1.4vw;margin-bottom:.8vh">平台规则风险</div>
+        <div class="body-zh">违反广告法（虚假宣传） · 导流违规（留联系方式） · 搬运抄袭（未注明出处）</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>维度七 · 爆雷隐患</div>
+    <div>Risk</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 12: 商业价值 ============ -->
+<section class="slide light">
+  <div class="chrome">
+    <div>维度八 · Commercial Value</div>
+    <div>12 / 15</div>
+  </div>
+  <div class="frame" style="padding-top:4vh;display:flex;flex-direction:column;gap:3vh;flex:1;overflow:hidden">
+    <div>
+      <div class="kicker" data-anim>Dimension 08 · 最终目的</div>
+      <h2 class="h-xl" data-anim>商业价值维度</h2>
+      <p class="lead" style="margin-top:1vh;max-width:60vw" data-anim>
+        最终目的是将流量转化为收益。法律类账号的主要变现方式。
+      </p>
+    </div>
+    <div class="grid-4" style="margin-top:2vh" data-anim>
+      <div class="stat-card">
+        <div class="stat-label">变现方式</div>
+        <div class="stat-nb" style="font-size:3.8vw">法律咨询</div>
+        <div class="stat-note">最常见的变现方式<br>通过评论区/私信引流</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">高价值</div>
+        <div class="stat-nb" style="font-size:3.8vw">案件委托</div>
+        <div class="stat-note">精准用户转化<br>客单价高，长期价值大</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">知识付费</div>
+        <div class="stat-nb" style="font-size:3.8vw">课程/电子书</div>
+        <div class="stat-note">适合有个人IP的账号<br>边际成本低</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">评估指标</div>
+        <div class="stat-nb" style="font-size:2.8vw">精准用户占比</div>
+        <div class="stat-note">评论区有多少用户有真实法律需求</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>维度八 · 变现潜力</div>
+    <div>Commercial</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 13: 快速分析步骤 ============ -->
+<section class="slide dark">
+  <div class="chrome">
+    <div>实战工具 · Quick Analysis</div>
+    <div>13 / 15</div>
+  </div>
+  <div class="frame" style="padding-top:4vh;display:flex;flex-direction:column;gap:3vh;flex:1;overflow:hidden">
+    <div>
+      <div class="kicker" data-anim>10-Minute Workflow</div>
+      <h2 class="h-xl" data-anim>快速分析步骤</h2>
+      <p class="lead" style="margin-top:1vh" data-anim>
+        10分钟搞定一条爆款视频的深度拆解。
+      </p>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:1.5vh;justify-content:center" data-anim>
+      <div style="display:flex;gap:2vw;align-items:flex-start">
+        <div class="step-nb" style="font-size:2.2vw;min-width:3vw">01</div>
+        <div>
+          <div class="step-title" style="font-size:1.5vw">看数据结构</div>
+          <div class="step-desc" style="font-size:max(12px,.95vw)">判断爆火类型（情绪型/干货型/热点型）</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:2vw;align-items:flex-start">
+        <div class="step-nb" style="font-size:2.2vw;min-width:3vw">02</div>
+        <div>
+          <div class="step-title" style="font-size:1.5vw">拆解开头3秒</div>
+          <div class="step-desc" style="font-size:max(12px,.95vw)">找到钩子的核心亮点，记录可复用模板</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:2vw;align-items:flex-start">
+        <div class="step-nb" style="font-size:2.2vw;min-width:3vw">03</div>
+        <div>
+          <div class="step-title" style="font-size:1.5vw">梳理内容结构</div>
+          <div class="step-desc" style="font-size:max(12px,.95vw)">总结可复制的逻辑框架，记录金句和转折点</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:2vw;align-items:flex-start">
+        <div class="step-nb" style="font-size:2.2vw;min-width:3vw">04</div>
+        <div>
+          <div class="step-title" style="font-size:1.5vw">浏览评论区热评</div>
+          <div class="step-desc" style="font-size:max(12px,.95vw)">挖掘用户需求和争议点，这些是后续爆款选题</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>10分钟快速分析流程</div>
+    <div>Workflow</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 14: 行动建议 ============ -->
+<section class="slide light">
+  <div class="chrome">
+    <div>实战应用 · Action Guide</div>
+    <div>14 / 15</div>
+  </div>
+  <div class="frame" style="padding-top:4vh;display:flex;flex-direction:column;gap:3vh;flex:1;overflow:hidden">
+    <div>
+      <div class="kicker" data-anim>Action Guide</div>
+      <h2 class="h-xl" data-anim>如何应用这个框架</h2>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:2vh;justify-content:center" data-anim>
+      <div class="callout">
+        <div style="font-family:var(--serif-zh);font-weight:700;font-size:1.4vw;margin-bottom:.8vh">第一步：对标分析</div>
+        <div class="body-zh">找3-5个同领域爆款视频，用8维度框架逐一拆解，建立自己的"爆款模板库"</div>
+      </div>
+      <div class="callout" style="margin-top:1vh">
+        <div style="font-family:var(--serif-zh);font-weight:700;font-size:1.4vw;margin-bottom:.8vh">第二步：选题策划</div>
+        <div class="body-zh">用"选题类型×切入点"矩阵生成选题，优先选"反差认知型+情绪共鸣型"组合</div>
+      </div>
+      <div class="callout" style="margin-top:1vh">
+        <div style="font-family:var(--serif-zh);font-weight:700;font-size:1.4vw;margin-bottom:.8vh">第三步：结构套用</div>
+        <div class="body-zh">直接套用"黄金3秒钩子→案例+分析+结论→互动引导"的爆款公式</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>框架应用三步法</div>
+    <div>Action</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 15: 收束 ============ -->
+<section class="slide hero dark">
+  <div class="chrome">
+    <div>总结 · Takeaway</div>
+    <div>15 / 15</div>
+  </div>
+  <div class="frame" style="display:grid;gap:6vh;align-content:center;min-height:75vh">
+    <div class="kicker" data-anim>The Takeaway</div>
+    <h1 class="h-hero" style="font-size:7vw;line-height:1.1" data-anim>
+      <span style="display:block">爆火可以</span>
+      <span style="display:block">被系统复制</span>
+    </h1>
+    <p class="lead" style="max-width:55vw" data-anim>
+      8大维度不是玄学，是可以通过刻意练习掌握的系统性方法论。<br>
+      从下一个视频开始，用框架指导创作，而非凭感觉。
+    </p>
+    <div class="meta" style="margin-top:3vh" data-anim>
+      <span>法律科普 · 内容策略 · 数据分析</span>
+    </div>
+  </div>
+  <div class="foot">
+    <div>让爆火从偶然变成必然</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+</div>
+
+<div id="nav"></div>
+
+<script>
+/* =============== WebGL 双背景 =============== */
+const VS = `attribute vec2 position;void main(){gl_Position=vec4(position,0.0,1.0);}`;
+const FS_DARK = `precision highp float;
+uniform vec2 u_resolution;uniform float u_time;uniform vec2 u_mouse;
+vec3 palette(float t,vec3 a,vec3 b,vec3 c,vec3 d){return a+b*cos(6.28318*(c*t+d));}
+void main(){
+  vec2 uv=gl_FragColor.xy/u_resolution.xy;
+  vec2 p=uv*2.0-1.0;p.x*=u_resolution.x/u_resolution.y;
+  vec2 m=u_mouse*2.0-1.0;m.x*=u_resolution.x/u_resolution.y;
+  float md=length(p-m);
+  float mr=sin(md*15.0-u_time*4.0)*exp(-md*3.0);p+=mr*0.08;
+  vec2 p0=p;
+  for(float i=1.0;i<4.0;i++){p.x+=0.1/i*sin(i*3.0*p.y+u_time*0.4)+0.05;p.y+=0.1/i*cos(i*2.0*p.x+u_time*0.3)-0.05;}
+  float r=length(p);float ang=atan(p.y,p.x);
+  vec3 a=vec3(0.12,0.12,0.13);vec3 b=vec3(0.03,0.04,0.05);vec3 c=vec3(1.0,1.0,1.0);vec3 d=vec3(0.1,0.2,0.4);
+  vec3 col=palette(r*1.5+p0.x*0.5+u_time*0.1,a,b,c,d);
+  float disp=sin(r*25.0-u_time*1.5+ang*2.0)*0.5+0.5;
+  col+=vec3(disp*0.015,disp*0.01,disp*0.02);
+  float hi=pow(sin(p.x*4.0+p.y*3.0+u_time)*0.5+0.5,8.0);
+  col+=hi*0.08;
+  vec3 base=vec3(0.05,0.05,0.06);
+  col=mix(base,col,0.85);
+  gl_FragColor=vec4(col,1.0);
+}`;
+const FS_LIGHT = `precision highp float;
+uniform vec2 u_resolution;uniform float u_time;uniform vec2 u_mouse;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){
+  vec2 i=floor(p),f=fract(p);
+  float a=hash(i),b=hash(i+vec2(1,0));
+  float c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));
+  vec2 u=f*f*(3.0-2.0*f);
+  return mix(a,b,u.x)+(c-a)*u.y*(1.0-u.x)+(d-b)*u.x*u.y;}
+float fbm(vec2 p){
+  float v=0.0,a=0.5;mat2 m=mat2(0.80,0.60,-0.60,0.80);
+  for(int i=0;i<5;i++){v+=a*noise(p);p=m*p*2.02;a*=0.5;}
+  return v;}
+void main(){
+  vec2 uv=gl_FragColor.xy/u_resolution.xy;
+  vec2 p=uv;p.x*=u_resolution.x/u_resolution.y;
+  vec2 m=u_mouse;m.x*=u_resolution.x/u_resolution.y;
+  vec2 md=p-m;float dl=length(md);
+  p+=normalize(md+vec2(0.0001))*exp(-dl*5.0)*0.03;
+  vec2 q=vec2(fbm(p*1.8+u_time*0.07),fbm(p*1.8+vec2(5.2,1.3)+u_time*0.06));
+  vec2 r=vec2(fbm(p*2.0+q*1.3+vec2(1.7,9.2)+u_time*0.05),fbm(p*2.0+q*1.3+vec2(8.3,2.8)+u_time*0.04));
+  float f=fbm(p*2.2+r*1.5);
+  vec3 silverDark=vec3(0.86,0.85,0.84);vec3 paper=vec3(0.955,0.945,0.925);
+  vec3 col=mix(silverDark,paper,f);
+  float ph=r.x*2.2+u_time*0.35;
+  col+=vec3(0.78,0.62,0.92)*sin(ph)*0.055;
+  col+=vec3(0.55,0.72,0.95)*sin(ph*0.8+2.0)*0.05;
+  float hl=smoothstep(0.48,0.92,f);
+  col+=hl*0.06;
+  gl_FragColor=vec4(col,1.0);}`;
+
+const mouse={x:0.5,y:0.5};
+addEventListener('mousemove',e=>{mouse.x=e.clientX/innerWidth;mouse.y=e.clientY/innerHeight});
+
+function bootGL(canvasId, fsSrc){
+  const canvas=document.getElementById(canvasId);
+  const gl=canvas.getContext('webgl',{alpha:false,antialias:true});
+  if(!gl) return ()=>false;
+  const mk=(t,s)=>{const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh};
+  const prog=gl.createProgram();
+  gl.attachShader(prog,mk(gl.VERTEX_SHADER,VS));
+  gl.attachShader(prog,mk(gl.FRAGMENT_SHADER,fsSrc));
+  gl.linkProgram(prog);gl.useProgram(prog);
+  const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+  const pos=gl.getAttribLocation(prog,'position');
+  gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+  const lRes=gl.getUniformLocation(prog,'u_resolution');
+  const lT=gl.getUniformLocation(prog,'u_time');
+  const lM=gl.getUniformLocation(prog,'u_mouse');
+  const resize=()=>{const d=Math.min(window.devicePixelRatio||1,2);canvas.width=innerWidth*d;canvas.height=innerHeight*d;gl.viewport(0,0,canvas.width,canvas.height);};
+  addEventListener('resize',resize);resize();
+  return (tSec)=>{gl.uniform2f(lRes,canvas.width,canvas.height);gl.uniform1f(lT,tSec);gl.uniform2f(lM,mouse.x,1-mouse.y);gl.drawArrays(gl.TRIANGLES,0,6);return true;};
+}
+const drawDark=bootGL('bg-dark',FS_DARK);
+const drawLight=bootGL('bg-light',FS_LIGHT);
+const t0=Date.now();
+(function loop(){const t=(Date.now()-t0)/1000;drawDark(t);drawLight(t);requestAnimationFrame(loop);})();
+
+/* =============== 导航 =============== */
+const deck=document.getElementById('deck');
+const slides=deck.querySelectorAll('.slide');
+const nav=document.getElementById('nav');
+let idx=0,total=slides.length,lock=false;
+deck.style.width=(total*100)+'vw';
+slides.forEach((s,i)=>{const b=document.createElement('button');b.className='dot';b.dataset.i=i;b.setAttribute('aria-label','Page '+(i+1));b.onclick=()=>go(i);nav.appendChild(b);});
+function go(n){if(lock)return;idx=Math.max(0,Math.min(total-1,n));deck.style.transform=`translateX(${-idx*100}vw)`;nav.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===idx));const el=slides[idx];const th=el.dataset.theme||(el.classList.contains('light')?'light':(el.classList.contains('dark')?'dark':'dark'));document.body.classList.toggle('light-bg',th==='light');if(window.__playSlide)setTimeout(()=>window.__playSlide(idx),450);lock=true;setTimeout(()=>lock=false,700);}
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.preventDefault();toggleOverview();return;}
+  if(overviewOn)return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '||e.key==='ArrowDown'){go(idx+1);return;}
+  if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp')go(idx-1);
+  if(e.key==='Home')go(0);if(e.key==='End')go(total-1);
+});
+let wheelTO=null,wheelAcc=0;
+addEventListener('wheel',e=>{wheelAcc+=e.deltaY+e.deltaX;if(Math.abs(wheelAcc)>50){go(idx+(wheelAcc>0?1:-1));wheelAcc=0;}clearTimeout(wheelTO);wheelTO=setTimeout(()=>wheelAcc=0,150);},{passive:true});
+let tx=0,ty=0;
+addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+addEventListener('touchend',e=>{const dx=(e.changedTouches[0].clientX-tx);const dy=(e.changedTouches[0].clientY-ty);if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){go(idx+(dx<0?1:-1));}},{passive:true});
+let overviewOn=false;
+const ov=document.createElement('div');ov.id='overview';ov.style.cssText='position:fixed;inset:0;z-index:100;background:rgba(var(--ink-rgb),.92);backdrop-filter:blur(12px);display:none;overflow-y:auto;padding:4vh 4vw';document.body.appendChild(ov);
+function buildOverview(){ov.innerHTML='';const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:2vh 1.6vw;max-width:90vw;margin:0 auto';slides.forEach((s,i)=>{const card=document.createElement('div');card.style.cssText='cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid '+(i===idx?'rgba(var(--paper-rgb),.8)':'rgba(var(--paper-rgb),.15)')+';transition:border-color .2s';card.onmouseenter=()=>card.style.borderColor='rgba(var(--paper-rgb),.6)';card.onmouseleave=()=>card.style.borderColor=i===idx?'rgba(var(--paper-rgb),.8)':'rgba(var(--paper-rgb),.15)';const wrap=document.createElement('div');wrap.style.cssText='width:100%;aspect-ratio:16/9;overflow:hidden;position:relative;pointer-events:none;background:'+(s.classList.contains('light')?'var(--paper)':'var(--ink)');const clone=s.cloneNode(true);clone.style.cssText='width:100vw;height:100vh;transform:scale('+(1/4.5)+');transform-origin:top left;position:absolute;top:0;left:0;pointer-events:none';wrap.appendChild(clone);const label=document.createElement('div');label.style.cssText='padding:6px 10px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--paper);opacity:.7';label.textContent=(i+1)+' / '+total;card.appendChild(wrap);card.appendChild(label);card.onclick=()=>{toggleOverview();go(i)};grid.appendChild(card);});ov.appendChild(grid);}
+function toggleOverview(){overviewOn=!overviewOn;if(overviewOn){buildOverview();ov.style.display='block';}else{ov.style.display='none';}}
+go(0);
+</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+<script type="module">
+let motion;
+try { motion = await import('./assets/motion.min.js'); } catch(e1) { try { motion = await import('https://cdn.jsdelivr.net/npm/motion@11.11.17/+esm'); } catch(e2) { document.querySelectorAll('[data-anim]').forEach(el=>{el.style.opacity='1';el.style.transform='none'}); }}
+if(motion){
+  const { animate, stagger } = motion;
+  document.body.classList.add('motion-ready');
+  const EASE = [.22, 1, .36, 1];
+  const slides = [...document.querySelectorAll('.slide')];
+  let lastIdx = -1;
+  function resetAnims(slide){slide.querySelectorAll('[data-anim]').forEach(el=>{el.style.opacity='';el.style.transform='';});}
+  function playSlide(i){
+    const slide = slides[i]; if(!slide) return; lastIdx = i;
+    const recipe = slide.dataset.animate || (slide.classList.contains('hero') ? 'hero' : 'cascade');
+    if(recipe === 'pipeline'){/* not used */ return;}
+    resetAnims(slide);
+    const all = [...slide.querySelectorAll('[data-anim]')]; if(!all.length) return;
+    if(recipe === 'hero'){animate(all,{opacity:[0,1],y:[14,0]},{duration:.9,delay:stagger(.16,{start:.2}),easing:EASE});return;}
+    animate(all,{opacity:[0,1],y:[16,0]},{duration:.75,delay:stagger(.1,{start:.15}),easing:EASE});
+  }
+  window.__playSlide = playSlide;
+  playSlide(0);
+}
+</script>
+</body>
+</html>
