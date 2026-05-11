@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行贿受贿 · 刑事法律风险培训</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0a0a0b;
+    --ink-rgb:10,10,11;
+    --paper:#f1efea;
+    --paper-rgb:241,239,234;
+    --paper-tint:#e8e5de;
+    --ink-tint:#18181a;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --serif-en:"Playfair Display","Source Serif 4",Georgia,serif;
+    --serif-body-en:"Source Serif 4",Georgia,serif;
+    --serif-zh:"Noto Serif SC",source-han-serif-sc,serif;
+    --sans-zh:"Noto Sans SC",source-han-sans-sc,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--ink);color:var(--paper);font-family:var(--sans-zh);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  canvas.bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block;transition:opacity 1.2s ease}
+  canvas#bg-light{opacity:0}
+  canvas#bg-dark{opacity:1}
+  body.light-bg canvas#bg-light{opacity:1}
+  body.light-bg canvas#bg-dark{opacity:0}
+  #deck{position:fixed;inset:0;width:10000vw;height:100vh;display:flex;flex-wrap:nowrap;transition:transform .9s cubic-bezier(.77,0,.175,1);z-index:10;will-change:transform}
+  .slide{width:100vw;height:100vh;flex:0 0 100vw;position:relative;padding:6vh 6vw 10vh 6vw;display:flex;flex-direction:column;overflow:hidden}
+  .slide.light{color:var(--ink);background:var(--paper)}
+  .slide.dark{color:var(--paper);background:var(--ink)}
+  .slide::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;transition:background .7s ease}
+  .slide.light::before{background:rgba(var(--paper-rgb),.78);backdrop-filter:blur(3px)}
+  .slide.dark::before{background:rgba(var(--ink-rgb),.78);backdrop-filter:blur(3px)}
+  .slide.hero.light::before{background:rgba(var(--paper-rgb),.16);backdrop-filter:none}
+  .slide.hero.dark::before{background:rgba(var(--ink-rgb),.12);backdrop-filter:none}
+  .slide.hero::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+  .slide.hero.light::after{background:linear-gradient(180deg,rgba(var(--paper-rgb),.28) 0%,rgba(var(--paper-rgb),0) 14%,rgba(var(--paper-rgb),0) 86%,rgba(var(--paper-rgb),.28) 100%)}
+  .slide.hero.dark::after{background:linear-gradient(180deg,rgba(var(--ink-rgb),.32) 0%,rgba(var(--ink-rgb),0) 14%,rgba(var(--ink-rgb),0) 86%,rgba(var(--ink-rgb),.32) 100%)}
+  .chrome{display:flex;justify-content:space-between;align-items:flex-start;font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.7}
+  .chrome .left,.chrome .right{display:flex;gap:2.4em;align-items:center}
+  .chrome .sep{width:40px;height:1px;background:currentColor;opacity:.4}
+  .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.55}
+  .foot .title{font-family:var(--serif-zh);font-weight:400;letter-spacing:.05em;text-transform:none;opacity:.75;font-size:13px}
+  .tag{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;padding:6px 14px;border:1px solid currentColor;opacity:.85}
+  .rule{width:100%;height:1px;background:currentColor;opacity:.25;margin:3vh 0}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.3em;text-transform:uppercase;opacity:.6;margin-bottom:2.6vh}
+  .h-hero{font-family:var(--serif-zh);font-weight:900;font-size:10vw;line-height:.96;letter-spacing:-.02em}
+  .h-xl{font-family:var(--serif-zh);font-weight:700;font-size:6.2vw;line-height:1.08;letter-spacing:-.01em}
+  .h-sub{font-family:var(--serif-zh);font-weight:500;font-size:3.1vw;line-height:1.25;letter-spacing:0;opacity:.7}
+  .h-md{font-family:var(--serif-zh);font-weight:600;font-size:2.3vw;line-height:1.3}
+  .lead{font-family:var(--serif-zh);font-weight:400;font-size:1.75vw;line-height:1.5;opacity:.86}
+  .meta-row{display:flex;gap:1.2em;align-items:baseline;flex-wrap:wrap;font-family:var(--mono);font-size:max(12px,.92vw);letter-spacing:.16em;text-transform:uppercase;opacity:.6}
+  .stat-card{display:flex;flex-direction:column;gap:.8vh;align-items:flex-start;padding-top:1.6vh;border-top:1px solid currentColor;border-color:rgba(127,127,127,.3)}
+  .stat-card .stat-label{font-family:var(--mono);font-size:max(10px,.78vw);letter-spacing:.24em;text-transform:uppercase;opacity:.55}
+  .stat-card .stat-nb{font-family:var(--serif-en);font-weight:800;line-height:.9;letter-spacing:-.03em;font-feature-settings:"tnum";margin-top:.4vh}
+  .stat-card .stat-nb .stat-unit{font-family:var(--serif-zh);font-weight:500;font-size:.38em;letter-spacing:0;opacity:.72;margin-left:.14em}
+  .stat-card .stat-note{font-family:var(--sans-zh);font-weight:400;font-size:max(12px,1vw);line-height:1.55;opacity:.72;margin-top:.6vh}
+  .grid-6{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:3vw 5vw;flex:1;align-content:center;padding:2vh 0}
+  .pillar{display:flex;flex-direction:column;gap:1.2vh}
+  .pillar .t{font-family:var(--serif-zh);font-weight:700;line-height:1.2}
+  .pillar .d{font-family:var(--sans-zh);font-weight:400;opacity:.76;line-height:1.6}
+  .grid-3-3{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(0,1fr);gap:2vh 2vw}
+  .pipeline-section{margin-top:4.4vh;padding-top:2.8vh;border-top:1px dashed rgba(127,127,127,.32)}
+  .pipeline-section:first-of-type{border-top:0;padding-top:0;margin-top:3vh}
+  .pipeline-label{font-family:var(--mono);font-size:max(11px,.85vw);letter-spacing:.24em;text-transform:uppercase;opacity:.62;margin-bottom:2.2vh}
+  .pipeline{display:grid;gap:1.2vw}
+  .pipeline[data-cols="3"]{grid-template-columns:repeat(3,1fr)}
+  .pipeline[data-cols="2"]{grid-template-columns:repeat(2,1fr)}
+  .step{display:flex;flex-direction:column;gap:.8vh;padding-top:1.4vh;border-top:1px solid currentColor;border-color:rgba(127,127,127,.35)}
+  .step-nb{font-family:var(--serif-en);font-style:italic;font-weight:500;font-size:1.15vw;opacity:.45}
+  .step-title{font-family:var(--sans-zh);font-weight:700;font-size:1.55vw;letter-spacing:.01em;line-height:1.2}
+  .step-desc{font-family:var(--sans-zh);font-weight:400;font-size:max(12px,.95vw);line-height:1.45;opacity:.72}
+  .callout{padding:3vh 2.4vw;border-left:3px solid currentColor;position:relative;font-family:var(--serif-zh);font-size:max(15px,1.2vw);line-height:1.55;opacity:.92}
+  .slide.light .callout{background:rgba(var(--ink-rgb),.05)}
+  .slide.dark .callout{background:rgba(var(--paper-rgb),.06)}
+  .callout .cite,.callout-src{display:block;margin-top:1.6vh;font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.6}
+  .callout .q-big{font-family:var(--serif-zh);font-weight:600;font-size:max(17px,1.6vw);line-height:1.42}
+  .rowline{display:grid;grid-template-columns:1fr 2fr 1fr;gap:2vw;padding:2.2vh 0;border-top:1px solid currentColor;align-items:center;border-color:rgba(127,127,127,.25)}
+  .rowline:last-child{border-bottom:1px solid currentColor}
+  .rowline .k{font-family:var(--serif-zh);font-weight:700;font-size:1.7vw}
+  .rowline .v{font-family:var(--sans-zh);font-weight:400;font-size:max(14px,1.2vw);opacity:.85;line-height:1.55}
+  .rowline .m{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.6;justify-self:end}
+  .frame{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+  [data-anim]{opacity:1}
+  body.motion-ready [data-anim]{opacity:0}
+  body.motion-ready [data-anim="left"]{transform:translateX(-24px)}
+  body.motion-ready [data-anim="right"]{transform:translateX(24px)}
+  body.motion-ready [data-anim="line"]{opacity:0;transform:translateY(10px)}
+  body.motion-ready [data-animate="pipeline"] [data-anim]{opacity:.15}
+  #nav{position:fixed;left:50%;bottom:2.6vh;transform:translateX(-50%);z-index:30;display:flex;gap:10px;padding:8px 14px;border-radius:999px;background:rgba(0,0,0,.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  #nav .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all .3s ease;border:0;padding:0}
+  #nav .dot:hover{background:rgba(255,255,255,.5);transform:scale(1.15)}
+  #nav .dot.active{background:rgba(255,255,255,.95);width:22px;border-radius:999px}
+  body.light-bg #nav{background:rgba(255,255,255,.25)}
+  body.light-bg #nav .dot{background:rgba(var(--ink-rgb),.25)}
+  body.light-bg #nav .dot.active{background:rgba(var(--ink-rgb),.9)}
+  #hint{position:fixed;bottom:3vh;right:3vw;z-index:30;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.4;mix-blend-mode:difference;color:#aaa}
+</style>
+</head>
+<body>
+
+<canvas id="bg-dark" class="bg"></canvas>
+<canvas id="bg-light" class="bg"></canvas>
+<div id="hint">← → 翻页 · ESC 索引</div>
+
+<div id="deck">
+
+<!-- ====== 第1页：封面 hero dark ====== -->
+<section class="slide hero dark" data-animate="hero">
+  <div class="chrome">
+    <div>云南弘瑞律师事务所 · 2026.05</div>
+    <div>Vol.01</div>
+  </div>
+  <div class="frame" style="display:grid;gap:4vh;align-content:center;min-height:80vh">
+    <div class="kicker" data-anim>Legal Training · 刑事法律风险</div>
+    <h1 class="h-hero" data-anim>行贿受贿</h1>
+    <h2 class="h-sub" data-anim>刑事法律风险培训</h2>
+    <p class="lead" style="max-width:60vw" data-anim>
+      了解职务犯罪边界，<br>守住法律底线，保护企业与自己。
+    </p>
+    <div class="meta-row" data-anim>
+      <span>李燕梅</span><span>·</span><span>云南弘瑞律师事务所</span>
+    </div>
+  </div>
+  <div class="foot">
+    <div>刑事合规 · 职务犯罪法律风险培训</div>
+    <div>— 2026 —</div>
+  </div>
+</section>
+
+<!-- ====== 第2页：数据大字报 light · 修正：stat-nb 字号从 5.8vw 降到 4.5vw ====== -->
+<section class="slide light">
+  <div class="chrome">
+    <div>职务犯罪危害 · Harm of Occupational Crime</div>
+    <div>第 02 / 15 页</div>
+  </div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>为什么会职务犯罪？</div>
+    <h2 class="h-xl" data-anim>五大成因</h2>
+    <p class="lead" style="margin-bottom:4vh;max-width:65vw" data-anim>
+      信念动摇、交友不慎、法纪淡薄、<br>监督不力、制度薄弱、惩处震慑不足。
+    </p>
+    <div class="grid-6" style="margin-top:2vh">
+      <div class="stat-card" data-anim>
+        <div class="stat-label">成因 01</div>
+        <div class="stat-nb" style="font-size:4.5vw">信念<span class="stat-unit">动摇</span></div>
+        <div class="stat-note">价值观念偏差，道德信念失守，是犯罪心理形成的根源</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">成因 02</div>
+        <div class="stat-nb" style="font-size:4.5vw">交友<span class="stat-unit">不慎</span></div>
+        <div class="stat-note">盲目重人情、讲义气，易被别有用心之人拉拢裹挟</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">成因 03</div>
+        <div class="stat-nb" style="font-size:4.5vw">法纪<span class="stat-unit">淡薄</span></div>
+        <div class="stat-note">不学法、不懂法，漠视法规纪律，由违规滑向犯罪</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">成因 04</div>
+        <div class="stat-nb" style="font-size:4.5vw">监督<span class="stat-unit">不力</span></div>
+        <div class="stat-note">监督制约机制缺乏有效制衡，为职务犯罪留下漏洞</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">成因 05</div>
+        <div class="stat-nb" style="font-size:4.5vw">惩处<span class="stat-unit">不足</span></div>
+        <div class="stat-note">打击未能及时有效，助长侥幸心理，最终走向制裁</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">严重后果</div>
+        <div class="stat-nb" style="font-size:4.5vw">行政<span class="stat-unit">+刑事</span></div>
+        <div class="stat-note">行政处分 → 监管处罚 → 刑事责任，三层递进</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>五大成因 · 三层后果</div>
+    <div>第 02 页</div>
+  </div>
+</section>
+
+<!-- ====== 第3页：幕封 hero dark ====== -->
+<section class="slide hero dark" data-animate="hero">
+  <div class="chrome">
+    <div>第一幕 · 法律法规体系</div>
+    <div>Act I · 03 / 15</div>
+  </div>
+  <div class="frame" style="display:grid;gap:6vh;align-content:center;min-height:80vh">
+    <div class="kicker" data-anim>Act I</div>
+    <h1 class="h-hero" style="font-size:7vw" data-anim>法律法规<br>体系</h1>
+    <p class="lead" style="max-width:55vw" data-anim>
+      从《刑法》到2026年最新司法解释，<br>定罪量刑标准全面并轨。
+    </p>
+  </div>
+  <div class="foot">
+    <div>职务犯罪法律法规体系</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+<!-- ====== 第4页：左文右图 light ====== -->
+<section class="slide light">
+  <div class="chrome">
+    <div>2026 司法解释 · New Interpretation</div>
+    <div>第 04 / 15 页</div>
+  </div>
+  <div class="frame" style="display:grid;grid-template-columns:7fr 5fr;gap:3vw;align-items:start;padding-top:6vh">
+    <div style="display:flex;flex-direction:column;justify-content:space-between;gap:3vh;padding-top:2vh">
+      <div>
+        <div class="kicker" data-anim>2026 · 新规变化</div>
+        <h2 class="h-xl" style="font-size:4.8vw;max-width:38vw" data-anim>
+          同罪<br>同罚
+        </h2>
+        <p class="lead" style="margin-top:3vh;max-width:36vw" data-anim>
+          《最高人民法院、最高人民检察院关于办理贪污贿赂刑事案件适用法律若干问题的解释（二）》
+        </p>
+      </div>
+      <div class="callout" data-anim>
+        消除公私企业司法标准差异，民营企业反腐进入"同罪同罚"的实质平等新阶段。
+        <div class="callout-src">— 2026 司法解释（二）</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2vh;padding-top:2vh" data-anim>
+      <div style="border-left:3px solid currentColor;padding:2vh 2vw;">
+        <div class="meta" style="margin-bottom:1vh">非国家工作人员受贿罪</div>
+        <div class="h-md" style="font-size:1.8vw">参照受贿罪标准</div>
+      </div>
+      <div style="border-left:3px solid currentColor;padding:2vh 2vw;">
+        <div class="meta" style="margin-bottom:1vh">对非国家工作人员行贿罪</div>
+        <div class="h-md" style="font-size:1.8vw">参照行贿罪标准</div>
+      </div>
+      <div style="border-left:3px solid currentColor;padding:2vh 2vw;">
+        <div class="meta" style="margin-bottom:1vh">职务侵占罪</div>
+        <div class="h-md" style="font-size:1.8vw">参照贪污罪标准</div>
+      </div>
+      <div style="border-left:3px solid currentColor;padding:2vh 2vw;">
+        <div class="meta" style="margin-bottom:1vh">挪用资金罪</div>
+        <div class="h-md" style="font-size:1.8vw">参照挪用公款罪标准</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>2026 司法解释（二）· 同罪同罚</div>
+    <div>第 04 页</div>
+  </div>
+</section>
+
+<!-- ====== 第5页：图片网格 dark · 修正：pillar 标题字号从 2vw 降到 1.7vw，描述文字缩小 ====== -->
+<section class="slide dark">
+  <div class="chrome">
+    <div>常见职务犯罪情形 · Common Crimes</div>
+    <div>第 05 / 15 页</div>
+  </div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>5 大常见罪名</div>
+    <h2 class="h-xl" data-anim>刑事风险<br>清单</h2>
+    <div class="grid-3-3" style="margin-top:3vh;gap:1.8vw 2vw">
+      <div class="pillar" data-anim>
+        <div class="t" style="font-size:1.7vw">非国家工作人员<br>受贿罪</div>
+        <div class="d" style="font-size:max(12px,.95vw);opacity:.78;margin-top:.8vh">
+          利用职务便利，索取或非法收受他人财物，为他人谋取利益。
+        </div>
+      </div>
+      <div class="pillar" data-anim>
+        <div class="t" style="font-size:1.7vw">对非国家工作人员<br>行贿罪</div>
+        <div class="d" style="font-size:max(12px,.95vw);opacity:.78;margin-top:.8vh">
+          为谋取不正当利益，给予公司、企业工作人员以财物。
+        </div>
+      </div>
+      <div class="pillar" data-anim>
+        <div class="t" style="font-size:1.7vw">职务侵占罪</div>
+        <div class="d" style="font-size:max(12px,.95vw);opacity:.78;margin-top:.8vh">
+          利用职务便利，将本单位财物非法占为己有。
+        </div>
+      </div>
+      <div class="pillar" data-anim>
+        <div class="t" style="font-size:1.7vw">挪用资金罪</div>
+        <div class="d" style="font-size:max(12px,.95vw);opacity:.78;margin-top:.8vh">
+          利用职务便利，挪用本单位资金归个人使用或借贷给他人。
+        </div>
+      </div>
+      <div class="pillar" data-anim>
+        <div class="t" style="font-size:1.7vw">单位行贿罪</div>
+        <div class="d" style="font-size:max(12px,.95vw);opacity:.78;margin-top:.8vh">
+          单位为谋取不正当利益而行贿，或违反国家规定给予回扣手续费。
+        </div>
+      </div>
+      <div class="pillar" data-anim>
+        <div class="t" style="font-size:1.7vw">2026 新规<br>从重情节</div>
+        <div class="d" style="font-size:max(12px,.95vw);opacity:.78;margin-top:.8vh">
+          医药、食品药品、安全生产等民生领域行贿，法定从重处罚。
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>5 大常见罪名 · 2026 新规</div>
+    <div>第 05 页</div>
+  </div>
+</section>
+
+<!-- ====== 第6页：左文右图 light ====== -->
+<section class="slide light">
+  <div class="chrome">
+    <div>非国家工作人员受贿罪 · Crime Detail</div>
+    <div>第 06 / 15 页</div>
+  </div>
+  <div class="frame" style="display:grid;grid-template-columns:7fr 5fr;gap:3vw;align-items:start;padding-top:6vh">
+    <div style="display:flex;flex-direction:column;justify-content:space-between;gap:3vh">
+      <div>
+        <div class="kicker" data-anim>罪名详解 01</div>
+        <h2 class="h-xl" style="font-size:4.2vw;max-width:36vw" data-anim>
+          非国家工作<br>人员受贿罪
+        </h2>
+        <p class="lead" style="margin-top:3vh;max-width:36vw" data-anim>
+          公司、企业或其他单位的工作人员，利用职务上的便利，索取他人财物或非法收受他人财物，为他人谋取利益，数额较大的行为。
+        </p>
+      </div>
+      <div class="callout" data-anim>
+        <div class="q-big">2026 新规：参照受贿罪<br>定罪量刑标准执行</div>
+        <div class="callout-src">— 司法解释（二）第八条</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0;padding-top:2vh" data-anim>
+      <div class="rowline" style="border-top:1px solid currentColor">
+        <div class="k" style="color:var(--ink)">数额较大</div>
+        <div class="v">3 万元以上</div>
+        <div class="m">3 年以下</div>
+      </div>
+      <div class="rowline">
+        <div class="k" style="color:var(--ink)">数额巨大</div>
+        <div class="v">100 万元以上</div>
+        <div class="m">3-10 年</div>
+      </div>
+      <div class="rowline">
+        <div class="k" style="color:var(--ink)">数额特别巨大</div>
+        <div class="v">500 万元以上</div>
+        <div class="m">10 年以上或无期</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>罪名详解 01 · 非国家工作人员受贿罪</div>
+    <div>第 06 页</div>
+  </div>
+</section>
+
+<!-- ====== 第7页：左文右图 dark ====== -->
+<section class="slide dark">
+  <div class="chrome">
+    <div>单位行贿罪 · Crime Detail</div>
+    <div>第 07 / 15 页</div>
+  </div>
+  <div class="frame" style="display:grid;grid-template-columns:7fr 5fr;gap:3vw;align-items:start;padding-top:6vh">
+    <div style="display:flex;flex-direction:column;justify-content:space-between;gap:3vh">
+      <div>
+        <div class="kicker" data-anim>罪名详解 02</div>
+        <h2 class="h-xl" style="font-size:4.2vw;max-width:36vw" data-anim>
+          单位行贿罪
+        </h2>
+        <p class="lead" style="margin-top:3vh;max-width:36vw" data-anim>
+          单位为谋取不正当利益而行贿，或违反国家规定给予国家工作人员回扣、手续费，情节严重的行为。
+        </p>
+      </div>
+      <div class="callout" data-anim>
+        <div class="q-big">单位 + 自然人<br>双重处罚</div>
+        <div class="callout-src">— 单位判处罚金，主管追究刑责</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0;padding-top:2vh" data-anim>
+      <div class="rowline" style="border-top:1px solid currentColor;border-color:rgba(127,127,127,.25)">
+        <div class="k" style="color:rgba(255,255,255,.9)">学术推广费</div>
+        <div class="v" style="color:rgba(255,255,255,.8)">需核查最终受益人，防止利益流向关键人员</div>
+      </div>
+      <div class="rowline" style="border-color:rgba(127,127,127,.25)">
+        <div class="k" style="color:rgba(255,255,255,.9)">经销商返利</div>
+        <div class="v" style="color:rgba(255,255,255,.8)">审计财务流水，核查是否存在销量挂钩异常支出</div>
+      </div>
+      <div class="rowline" style="border-color:rgba(127,127,127,.25)">
+        <div class="k" style="color:rgba(255,255,255,.9)">会议赞助</div>
+        <div class="v" style="color:rgba(255,255,255,.8)">留存会议议程、现场影像、支付凭证，证明真实合理</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>罪名详解 02 · 单位行贿罪</div>
+    <div>第 07 页</div>
+  </div>
+</section>
+
+<!-- ====== 第8页：幕封 hero light ====== -->
+<section class="slide hero light" data-animate="hero">
+  <div class="chrome">
+    <div>第二幕 · 合规体系建设</div>
+    <div>Act II · 08 / 15</div>
+  </div>
+  <div class="frame" style="display:grid;gap:6vh;align-content:center;min-height:80vh">
+    <div class="kicker" data-anim>Act II</div>
+    <h1 class="h-hero" style="font-size:7vw" data-anim>合规体系<br>建设</h1>
+    <p class="lead" style="max-width:55vw" data-anim>
+      建立内部识别机制，<br>完善合规体系，主动防范刑事风险。
+    </p>
+  </div>
+  <div class="foot">
+    <div>合规体系建设与应对措施</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+<!-- ====== 第9页：Pipeline light · 修正：第二个 pipeline-section 改成 data-cols="2" ====== -->
+<section class="slide light" data-animate="pipeline">
+  <div class="chrome">
+    <div>合规建设流程 · Compliance Pipeline</div>
+    <div>第 09 / 15 页</div>
+  </div>
+  <div class="frame">
+    <div class="kicker" data-anim>Pipeline · 合规建设 5 步</div>
+    <h2 class="h-xl" data-anim>合规体系<br>建设流程</h2>
+
+    <div class="pipeline-section">
+      <div class="pipeline-label">制度建设 · System Building</div>
+      <div class="pipeline" data-cols="3">
+        <div class="step" data-anim="step">
+          <div class="step-nb">01</div>
+          <div class="step-title">权限清单管理</div>
+          <div class="step-desc">明确"单位意志"与"个人行为"边界，清单式管理决策权限</div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="step-nb">02</div>
+          <div class="step-title">利益穿透审查</div>
+          <div class="step-desc">建立最终受益人追踪机制，确保利益未流向关键人员</div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="step-nb">03</div>
+          <div class="step-title">合规留痕标准</div>
+          <div class="step-desc">费用-服务-效果完整证据链，对应性审查</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-section">
+      <div class="pipeline-label">执行监督 · Execution & Supervision</div>
+      <div class="pipeline" data-cols="2">
+        <div class="step" data-anim="step">
+          <div class="step-nb">04</div>
+          <div class="step-title">关键岗位监督</div>
+          <div class="step-desc">对采购、财务、销售等重点岗位实施重点监督</div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="step-nb">05</div>
+          <div class="step-title">举报调查机制</div>
+          <div class="step-desc">设立内部举报渠道，建立独立调查部门</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>合规建设 5 步流程 · Pipeline</div>
+    <div>第 09 页</div>
+  </div>
+</section>
+
+<!-- ====== 第10页：大引用 dark ====== -->
+<section class="slide dark" data-animate="quote">
+  <div class="chrome">
+    <div>合规留痕 · Compliance Documentation</div>
+    <div>第 10 / 15 页</div>
+  </div>
+  <div class="frame" style="display:grid;gap:5vh;align-content:center;min-height:80vh">
+    <div class="kicker" data-anim>Quote · 合规关键</div>
+    <blockquote style="font-family:var(--serif-zh);font-weight:700;font-size:4.8vw;line-height:1.2;max-width:72vw">
+      <span data-anim="line" style="display:block">合规留痕的</span>
+      <span data-anim="line" style="display:block">"对应性"标准：</span>
+      <span data-anim="line" style="display:block;font-size:3.2vw;font-weight:500;margin-top:2vh">每一笔支出，均有明确的</span>
+      <span data-anim="line" style="display:block;font-size:3.2vw;font-weight:500">商业目的、可验证的执行记录、</span>
+      <span data-anim="line" style="display:block;font-size:3.2vw;font-weight:500">可量化的效果评估。</span>
+    </blockquote>
+    <div class="meta-row" data-anim>
+      <span>— 合规建设核心标准</span><span>·</span><span>费用-服务-效果 证据链</span>
+    </div>
+  </div>
+  <div class="foot">
+    <div>第 10 页 · 合规留痕"对应性"标准</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+<!-- ====== 第11页：并列对比 light ====== -->
+<section class="slide light" data-animate="directional">
+  <div class="chrome">
+    <div>危机应对 · Crisis Response</div>
+    <div>第 11 / 15 页</div>
+  </div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim> Crisis · 危机应对双阶段</div>
+    <h2 class="h-xl" style="margin-bottom:4vh" data-anim>行政调查 vs<br>刑事侦查</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5vw 4vh">
+      <div data-anim="left" style="padding:3vh 2vw;border-left:3px solid currentColor;opacity:.88">
+        <div class="kicker" style="opacity:.9;margin-bottom:1vh">阶段一 · 行政调查</div>
+        <h3 class="h-md" style="margin-top:1vh;font-size:1.8vw">主动配合<br>规范应对</h3>
+        <ul style="margin-top:3vh;padding-left:1.2em;display:flex;flex-direction:column;gap:1.2vh;font-family:var(--sans-zh);font-size:max(13px,1.05vw);line-height:1.55;opacity:.85">
+          <li>组建法务+财务+业务专项组</li>
+          <li>如实提供资料，全程留痕</li>
+          <li>规范陈述，防止行为性质扩大认定</li>
+          <li>主动整改纠错，争取从宽处理</li>
+        </ul>
+      </div>
+      <div data-anim="right" style="padding:3vh 2vw;border-left:3px solid currentColor;">
+        <div class="kicker" style="opacity:.9;margin-bottom:1vh">阶段二 · 刑事侦查</div>
+        <h3 class="h-md" style="margin-top:1vh;font-size:1.8vw">律师介入<br>精准辩护</h3>
+        <ul style="margin-top:3vh;padding-left:1.2em;display:flex;flex-direction:column;gap:1.2vh;font-family:var(--sans-zh);font-size:max(13px,1.05vw);line-height:1.55;opacity:.85">
+          <li>立即委托专业刑事律师介入</li>
+          <li>在律师指导下规范配合调查</li>
+          <li>依法争取自首、认罪认罚等从宽情节</li>
+          <li>区分单位犯罪与个人犯罪，精准界定</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>第 11 页 · 危机应对双阶段</div>
+    <div>Before / After</div>
+  </div>
+</section>
+
+<!-- ====== 第12页：问题页 hero dark ====== -->
+<section class="slide hero dark" data-animate="hero">
+  <div class="chrome">
+    <div>留给你的问题 · The Question</div>
+    <div>第 12 / 15 页</div>
+  </div>
+  <div class="frame" style="display:grid;gap:8vh;align-content:center;min-height:80vh">
+    <div class="kicker" data-anim>The Question</div>
+    <h1 class="h-hero" style="font-size:6vw;line-height:1.15">
+      <span data-anim style="display:block">你的企业里，</span>
+      <span data-anim style="display:block">哪条合规防线</span>
+      <span data-anim style="display:block">最薄弱？</span>
+    </h1>
+    <p class="lead" style="max-width:50vw" data-anim>
+      这个问题，不是法律问题，是管理问题。
+    </p>
+  </div>
+  <div class="foot">
+    <div>第 12 页 · The Question</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+<!-- ====== 第13页：数据大字报 light · 已修正：stat-nb 4.5vw + stat-note 行高调整 ====== -->
+<section class="slide light">
+  <div class="chrome">
+    <div>危机应对核心要点 · Key Points</div>
+    <div>第 13 / 15 页</div>
+  </div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>危机应对 · 5 条铁律</div>
+    <h2 class="h-xl" data-anim>行政调查阶段<br>应对策略</h2>
+    <div class="grid-6" style="margin-top:3vh">
+      <div class="stat-card" data-anim>
+        <div class="stat-label">铁律 01</div>
+        <div class="stat-nb" style="font-size:4.5vw">立即<span class="stat-unit">组队</span></div>
+        <div class="stat-note">组建法务+财务+业务专项应对组，分工负责</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">铁律 02</div>
+        <div class="stat-nb" style="font-size:4.5vw">如实<span class="stat-unit">配合</span></div>
+        <div class="stat-note">不隐匿、销毁、篡改证据，全程留痕</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">铁律 03</div>
+        <div class="stat-nb" style="font-size:4.5vw">规范<span class="stat-unit">陈述</span></div>
+        <div class="stat-note">在法务指导下陈述，防止个人行为扩大认定</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">铁律 04</div>
+        <div class="stat-nb" style="font-size:4.5vw">主动<span class="stat-unit">整改</span></div>
+        <div class="stat-note">主动开展合规整改、退赃退赔，争取从宽</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">铁律 05</div>
+        <div class="stat-nb" style="font-size:4.5vw">切割<span class="stat-unit">责任</span></div>
+        <div class="stat-note">精准区分单位犯罪与个人犯罪，界定关联人员</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">关键数字</div>
+        <div class="stat-nb" style="font-size:4.5vw">3<span class="stat-unit">年内</span></div>
+        <div class="stat-note">行政阶段主动投案，可认定为后续刑事阶段自首情节</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>危机应对 5 条铁律</div>
+    <div>第 13 页</div>
+  </div>
+</section>
+
+<!-- ====== 第14页：左文右图 dark ====== -->
+<section class="slide dark">
+  <div class="chrome">
+    <div>坚守底线 · Bottom Line</div>
+    <div>第 14 / 15 页</div>
+  </div>
+  <div class="frame" style="display:grid;grid-template-columns:7fr 5fr;gap:3vw;align-items:start;padding-top:6vh">
+    <div style="display:flex;flex-direction:column;justify-content:space-between;gap:3vh">
+      <div>
+        <div class="kicker" data-anim>Bottom Line · 坚守底线</div>
+        <h2 class="h-xl" style="font-size:4.8vw;max-width:38vw" data-anim>
+          五条<br>底线
+        </h2>
+        <p class="lead" style="margin-top:3vh;max-width:36vw" data-anim>
+          正确履职，接受监管，<br>不存侥幸心理。
+        </p>
+      </div>
+      <div class="callout" data-anim>
+        <div class="q-big">不违纪违法，<br>是对自己最大的保护。</div>
+        <div class="callout-src">— 坚守法律底线</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0;padding-top:2vh" data-anim>
+      <div class="rowline" style="border-top:1px solid currentColor;border-color:rgba(255,255,255,.25)">
+        <div class="k" style="color:rgba(255,255,255,.9)">01</div>
+        <div class="v" style="color:rgba(255,255,255,.8)">正确履职，不放纵自己内心欲望</div>
+      </div>
+      <div class="rowline" style="border-color:rgba(255,255,255,.25)">
+        <div class="k" style="color:rgba(255,255,255,.9)">02</div>
+        <div class="v" style="color:rgba(255,255,255,.8)">不违法、越权处理公事</div>
+      </div>
+      <div class="rowline" style="border-color:rgba(255,255,255,.25)">
+        <div class="k" style="color:rgba(255,255,255,.9)">03</div>
+        <div class="v" style="color:rgba(255,255,255,.8)">接受相关部门的监管、监察</div>
+      </div>
+      <div class="rowline" style="border-color:rgba(255,255,255,.25)">
+        <div class="k" style="color:rgba(255,255,255,.9)">04</div>
+        <div class="v" style="color:rgba(255,255,255,.8)">不存侥幸心理，事后感谢费也是犯罪</div>
+      </div>
+      <div class="rowline" style="border-top:1px solid currentColor;border-bottom:1px solid currentColor;border-color:rgba(255,255,255,.25)">
+        <div class="k" style="color:rgba(255,255,255,.9)">05</div>
+        <div class="v" style="color:rgba(255,255,255,.8)">正确处理政府人员索要贿赂的情况</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div>第 14 页 · 坚守底线 5 条</div>
+    <div>— · —</div>
+  </div>
+</section>
+
+<!-- ====== 第15页：收束 hero dark ====== -->
+<section class="slide hero dark" data-animate="hero">
+  <div class="chrome">
+    <div>谢谢 · The End</div>
+    <div>第 15 / 15 页</div>
+  </div>
+  <div class="frame" style="display:grid;gap:6vh;align-content:center;min-height:80vh">
+    <div class="kicker" data-anim>Takeaway · 核心收束</div>
+    <h1 class="h-hero" style="font-size:7vw" data-anim>守住底线<br>远离犯罪</h1>
+    <p class="lead" style="max-width:55vw" data-anim>
+      了解法律边界，完善合规体系，<br>是对企业、对自己、对家庭最大的负责。
+    </p>
+    <div class="meta-row" data-anim>
+      <span>李燕梅</span><span>·</span><span>云南弘瑞律师事务所</span><span>·</span><span>2026.05</span>
+    </div>
+  </div>
+  <div class="foot">
+    <div>THANKS · 谢谢大家</div>
+    <div>— 2026 —</div>
+  </div>
+</section>
+
+</div>
+
+<div id="nav"></div>
+
+<script>
+const VS = `attribute vec2 position;void main(){gl_Position=vec4(position,0.0,1.0);}`;
+const FS_DARK = `precision highp float;
+uniform vec2 u_resolution;uniform float u_time;uniform vec2 u_mouse;
+vec3 palette(float t,vec3 a,vec3 b,vec3 c,vec3 d){return a+b*cos(6.28318*(c*t+d));}
+void main(){
+  vec2 uv=gl_FragCoord.xy/u_resolution.xy;
+  vec2 p=uv*2.0-1.0;p.x*=u_resolution.x/u_resolution.y;
+  vec2 m=u_mouse*2.0-1.0;m.x*=u_resolution.x/u_resolution.y;
+  float md=length(p-m);
+  float mr=sin(md*15.0-u_time*4.0)*exp(-md*3.0);p+=mr*0.08;
+  vec2 p0=p;
+  for(float i=1.0;i<4.0;i++){
+    p.x+=0.1/i*sin(i*3.0*p.y+u_time*0.4)+0.05;
+    p.y+=0.1/i*cos(i*2.0*p.x+u_time*0.3)-0.05;
+  }
+  float r=length(p);float ang=atan(p.y,p.x);
+  vec3 a=vec3(0.12,0.12,0.13);
+  vec3 b=vec3(0.03,0.04,0.05);
+  vec3 c=vec3(1.0,1.0,1.0);
+  vec3 d=vec3(0.1,0.2,0.4);
+  vec3 col=palette(r*1.5+p0.x*0.5+u_time*0.1,a,b,c,d);
+  float disp=sin(r*25.0-u_time*1.5+ang*2.0)*0.5+0.5;
+  col+=vec3(disp*0.015,disp*0.01,disp*0.02);
+  float hi=pow(sin(p.x*4.0+p.y*3.0+u_time)*0.5+0.5,8.0);
+  col+=hi*0.08;
+  vec3 base=vec3(0.05,0.05,0.06);
+  col=mix(base,col,0.85);
+  gl_FragColor=vec4(col,1.0);
+}`;
+const FS_LIGHT = `precision highp float;
+uniform vec2 u_resolution;uniform float u_time;uniform vec2 u_mouse;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){
+  vec2 i=floor(p),f=fract(p);
+  float a=hash(i),b=hash(i+vec2(1,0));
+  float c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));
+  vec2 u=f*f*(3.0-2.0*f);
+  return mix(a,b,u.x)+(c-a)*u.y*(1.0-u.x)+(d-b)*u.x*u.y;
+}
+float fbm(vec2 p){
+  float v=0.0,a=0.5;
+  mat2 m=mat2(0.80,0.60,-0.60,0.80);
+  for(int i=0;i<5;i++){v+=a*noise(p);p=m*p*2.02;a*=0.5;}
+  return v;
+}
+void main(){
+  vec2 uv=gl_FragCoord.xy/u_resolution.xy;
+  vec2 p=uv;p.x*=u_resolution.x/u_resolution.y;
+  vec2 m=u_mouse;m.x*=u_resolution.x/u_resolution.y;
+  vec2 md=p-m;float dl=length(md);
+  p+=normalize(md+vec2(0.0001))*exp(-dl*5.0)*0.03;
+  vec2 q=vec2(fbm(p*1.8+u_time*0.07),fbm(p*1.8+vec2(5.2,1.3)+u_time*0.06));
+  vec2 r=vec2(fbm(p*2.0+q*1.3+vec2(1.7,9.2)+u_time*0.05),
+              fbm(p*2.0+q*1.3+vec2(8.3,2.8)+u_time*0.04));
+  float f=fbm(p*2.2+r*1.5);
+  vec3 silverDark=vec3(0.86,0.85,0.84);
+  vec3 paper=vec3(0.955,0.945,0.925);
+  vec3 col=mix(silverDark,paper,f);
+  float ph=r.x*2.2+u_time*0.35;
+  col+=vec3(0.78,0.62,0.92)*sin(ph)*0.055;
+  col+=vec3(0.55,0.72,0.95)*sin(ph*0.8+2.0)*0.05;
+  float hl=smoothstep(0.48,0.92,f);
+  col+=hl*0.06;
+  gl_FragColor=vec4(col,1.0);
+}`;
+const mouse={x:0.5,y:0.5};
+addEventListener('mousemove',e=>{mouse.x=e.clientX/innerWidth;mouse.y=e.clientY/innerHeight});
+function bootGL(canvasId, fsSrc){
+  const canvas=document.getElementById(canvasId);
+  const gl=canvas.getContext('webgl',{alpha:false,antialias:true});
+  if(!gl) return ()=>false;
+  const mk=(t,s)=>{const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh};
+  const prog=gl.createProgram();
+  gl.attachShader(prog,mk(gl.VERTEX_SHADER,VS));
+  gl.attachShader(prog,mk(gl.FRAGMENT_SHADER,fsSrc));
+  gl.linkProgram(prog);gl.useProgram(prog);
+  const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+  const pos=gl.getAttribLocation(prog,'position');
+  gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+  const lRes=gl.getUniformLocation(prog,'u_resolution');
+  const lT=gl.getUniformLocation(prog,'u_time');
+  const lM=gl.getUniformLocation(prog,'u_mouse');
+  const resize=()=>{
+    const d=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=innerWidth*d;canvas.height=innerHeight*d;
+    gl.viewport(0,0,canvas.width,canvas.height);
+  };
+  addEventListener('resize',resize);resize();
+  return (tSec)=>{
+    gl.uniform2f(lRes,canvas.width,canvas.height);
+    gl.uniform1f(lT,tSec);
+    gl.uniform2f(lM,mouse.x,1-mouse.y);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+    return true;
+  };
+}
+const drawDark=bootGL('bg-dark',FS_DARK);
+const drawLight=bootGL('bg-light',FS_LIGHT);
+const t0=Date.now();
+(function loop(){
+  const t=(Date.now()-t0)/1000;
+  drawDark(t);drawLight(t);
+  requestAnimationFrame(loop);
+})();
+</script>
+
+<script>
+const deck=document.getElementById('deck');
+const slides=deck.querySelectorAll('.slide');
+const nav=document.getElementById('nav');
+let idx=0,total=slides.length,lock=false;
+deck.style.width=(total*100)+'vw';
+slides.forEach((s,i)=>{
+  const b=document.createElement('button');
+  b.className='dot';b.dataset.i=i;b.setAttribute('aria-label','Page '+(i+1));
+  b.onclick=()=>go(i);
+  nav.appendChild(b);
+});
+function go(n){
+  if(lock)return;
+  idx=Math.max(0,Math.min(total-1,n));
+  deck.style.transform=`translateX(${-idx*100}vw)`;
+  nav.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+  const el=slides[idx];
+  const th=el.dataset.theme || (el.classList.contains('light')?'light':(el.classList.contains('dark')?'dark':'dark'));
+  document.body.classList.toggle('light-bg',th==='light');
+  if(window.__playSlide) setTimeout(()=>window.__playSlide(idx), 450);
+  lock=true;setTimeout(()=>lock=false,700);
+}
+let overviewOn=false;
+const ov=document.createElement('div');
+ov.id='overview';
+ov.style.cssText='position:fixed;inset:0;z-index:100;background:rgba(var(--ink-rgb),.92);backdrop-filter:blur(12px);display:none;overflow-y:auto;padding:4vh 4vw';
+document.body.appendChild(ov);
+function buildOverview(){
+  ov.innerHTML='';
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:2vh 1.6vw;max-width:90vw;margin:0 auto';
+  slides.forEach((s,i)=>{
+    const card=document.createElement('div');
+    card.style.cssText='cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid '+(i===idx?'rgba(var(--paper-rgb),.8)':'rgba(var(--paper-rgb),.15)')+';transition:border-color .2s';
+    card.onmouseenter=()=>card.style.borderColor='rgba(var(--paper-rgb),.6)';
+    card.onmouseleave=()=>card.style.borderColor=i===idx?'rgba(var(--paper-rgb),.8)':'rgba(var(--paper-rgb),.15)';
+    const wrap=document.createElement('div');
+    wrap.style.cssText='width:100%;aspect-ratio:16/9;overflow:hidden;position:relative;pointer-events:none;background:'+(s.classList.contains('light')?'var(--paper)':'var(--ink)');
+    const clone=s.cloneNode(true);
+    clone.style.cssText='width:100vw;height:100vh;transform:scale('+(1/4.5)+');transform-origin:top left;position:absolute;top:0;left:0;pointer-events:none';
+    wrap.appendChild(clone);
+    const label=document.createElement('div');
+    label.style.cssText='padding:6px 10px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--paper);opacity:.7';
+    label.textContent=(i+1)+' / '+total;
+    card.appendChild(wrap);
+    card.appendChild(label);
+    card.onclick=()=>{toggleOverview();go(i)};
+    grid.appendChild(card);
+  });
+  ov.appendChild(grid);
+}
+function toggleOverview(){
+  overviewOn=!overviewOn;
+  if(overviewOn){buildOverview();ov.style.display='block';}
+  else{ov.style.display='none';}
+}
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.preventDefault();toggleOverview();return;}
+  if(overviewOn)return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '||e.key==='ArrowDown'){
+    if(window.__pipeAdvance && window.__pipeAdvance()) return;
+    go(idx+1);return;
+  }
+  if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp')go(idx-1);
+  if(e.key==='Home')go(0);
+  if(e.key==='End')go(total-1);
+});
+let wheelTO=null,wheelAcc=0;
+addEventListener('wheel',e=>{
+  wheelAcc+=e.deltaY+e.deltaX;
+  if(Math.abs(wheelAcc)>50){
+    if(wheelAcc>0 && window.__pipeAdvance && window.__pipeAdvance()){
+      wheelAcc=0;
+    }else{
+      go(idx+(wheelAcc>0?1:-1));wheelAcc=0;
+    }
+  }
+  clearTimeout(wheelTO);wheelTO=setTimeout(()=>wheelAcc=0,150);
+},{passive:true});
+let tx=0,ty=0;
+addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+addEventListener('touchend',e=>{
+  const dx=(e.changedTouches[0].clientX-tx);
+  const dy=(e.changedTouches[0].clientY-ty);
+  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){
+    if(dx<0 && window.__pipeAdvance && window.__pipeAdvance()) return;
+    go(idx+(dx<0?1:-1));
+  }
+},{passive:true});
+go(0);
+</script>
+
+<script type="module">
+let motion;
+try {
+  motion = await import('./assets/motion.min.js');
+} catch(e1) {
+  try {
+    motion = await import('https://cdn.jsdelivr.net/npm/motion@11.11.17/+esm');
+  } catch(e2) {
+    console.warn('[motion] local + CDN both failed, disabling animations', e1, e2);
+    document.querySelectorAll('[data-anim]').forEach(el=>{el.style.opacity='1';el.style.transform='none'});
+    document.querySelectorAll('[data-animate="pipeline"] [data-anim]').forEach(el=>el.style.opacity='1');
+  }
+}
+if(motion){
+  const { animate, stagger } = motion;
+  document.body.classList.add('motion-ready');
+  const EASE = [.22, 1, .36, 1];
+  const slides = [...document.querySelectorAll('.slide')];
+  let pipeStep = -1;
+  let lastIdx = -1;
+  function resetAnims(slide){
+    slide.querySelectorAll('[data-anim]').forEach(el=>{
+      el.style.opacity='';
+      el.style.transform='';
+    });
+  }
+  function playSlide(i){
+    const slide = slides[i];
+    if(!slide) return;
+    lastIdx = i;
+    const recipe = slide.dataset.animate || (slide.classList.contains('hero') ? 'hero' : 'cascade');
+    if(recipe === 'pipeline'){
+      pipeStep = -1;
+      slide.querySelectorAll('[data-anim]').forEach(el=>{
+        el.style.opacity='0.15';
+        el.style.transform='none';
+      });
+      return;
+    }
+    resetAnims(slide);
+    const all = [...slide.querySelectorAll('[data-anim]')];
+    if(!all.length) return;
+    if(recipe === 'directional'){
+      const lefts  = all.filter(el=>el.dataset.anim==='left');
+      const divs   = all.filter(el=>el.dataset.anim==='divider');
+      const rights = all.filter(el=>el.dataset.anim==='right');
+      const others = all.filter(el=>!['left','right','divider'].includes(el.dataset.anim));
+      if(others.length) animate(others, {opacity:[0,1], y:[12,0]}, {duration:.6, delay:stagger(.1, {start:.15}), easing:EASE});
+      if(lefts.length)  animate(lefts,  {opacity:[0,1], x:[-24,0]}, {duration:.8, delay:.35, easing:EASE});
+      if(divs.length)   animate(divs,   {opacity:[0,.25]},          {duration:.5, delay:.9});
+      if(rights.length) animate(rights, {opacity:[0,1], x:[24,0]},  {duration:.8, delay:1.0, easing:EASE});
+      return;
+    }
+    if(recipe === 'quote'){
+      const lines = all.filter(el=>el.dataset.anim==='line');
+      const others = all.filter(el=>el.dataset.anim!=='line');
+      if(others.length) animate(others, {opacity:[0,1], y:[8,0]},    {duration:.6, delay:stagger(.12, {start:.2}), easing:EASE});
+      if(lines.length)  animate(lines,  {opacity:[.35,1], y:[10,0]}, {duration:.8, delay:stagger(.55, {start:.5}), easing:EASE});
+      return;
+    }
+    if(recipe === 'hero'){
+      animate(all, {opacity:[0,1], y:[14,0]}, {duration:.9, delay:stagger(.16, {start:.2}), easing:EASE});
+      return;
+    }
+    animate(all, {opacity:[0,1], y:[16,0]}, {duration:.75, delay:stagger(.1, {start:.15}), easing:EASE});
+  }
+  function pipeAdvance(){
+    const slide = slides[lastIdx];
+    if(!slide || slide.dataset.animate !== 'pipeline') return false;
+    const steps  = [...slide.querySelectorAll('[data-anim="step"]')];
+    const arrows = [...slide.querySelectorAll('[data-anim="arrow"]')];
+    if(pipeStep >= steps.length - 1) return false;
+    pipeStep++;
+    animate(steps[pipeStep], {opacity:[0.15,1], y:[8,0]}, {duration:.5, easing:EASE});
+    if(pipeStep > 0 && arrows[pipeStep-1]){
+      animate(arrows[pipeStep-1], {opacity:[0.15,.7]}, {duration:.3, delay:.15});
+    }
+    return true;
+  }
+  window.__playSlide = playSlide;
+  window.__pipeAdvance = pipeAdvance;
+  playSlide(0);
+}
+</script>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+
+</body>
+</html>
